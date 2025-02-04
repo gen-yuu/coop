@@ -1,0 +1,22 @@
+# NFCリーダーのコンテナ用Dockerfile
+FROM python:3.9-slim
+
+# 作業ディレクトリの設定
+WORKDIR /app
+
+# 依存ライブラリのインストール
+COPY ../nfc_service/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# NFCリーダースクリプトをコピー
+COPY ../nfc_service/nfc_service.py .
+
+# 環境変数をコンテナ内で利用可能にする
+ENV NFC_READER_ID="usb:054c:06c3"
+ENV RABBITMQ_HOST="rabbitmq"
+ENV RABBITMQ_PORT="5672"
+ENV RABBITMQ_USER="srv-admin"
+ENV RABBITMQ_PASSWORD="704lIlac"
+
+# スクリプトを実行
+CMD ["python", "nfc_reader.py"]

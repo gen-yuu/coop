@@ -1,68 +1,67 @@
-version: '3.8'
-
 services:
-  app:
-    build: ./docker/Dockerfile.app
-    container_name: app
-    restart: always
-    volumes:
-      - ./app:/usr/src/app
-    ports:
-      - "8080:8080"
-    environment:
-      - DB_HOST=${DB_HOST}
-      - DB_USER=${DB_USER}
-      - DB_PW=${DB_PW}
-      - DB_NAME=${DB_NAME}
-    networks:
-      - app-net
+  # app:
+  #   build: ./docker/Dockerfile.app
+  #   container_name: app
+  #   restart: always
+  #   volumes:
+  #     - ./app:/usr/src/app
+  #   ports:
+  #     - "8080:8080"
+  #   environment:
+  #     - DB_HOST=${DB_HOST}
+  #     - DB_USER=${DB_USER}
+  #     - DB_PW=${DB_PW}
+  #     - DB_NAME=${DB_NAME}
+  #   networks:
+  #     - app-net
 
-  reader:
-    build: ./docker/Dockerfile.reader
-    container_name: reader
+  nfc_service:
+    build:
+      context: ./
+      dockerfile: docker/Dockerfile.nfc
+    container_name: nfc_service
     restart: always
-    volumes:
-      - ./reader:/usr/src/reader
     environment:
-      - DB_HOST=${DB_HOST}
-      - DB_USER=${DB_USER}
-      - DB_PW=${DB_PW}
-      - DB_NAME=${DB_NAME}
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - RABBITMQ_PORT=${RABBITMQ_PORT}
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PW=${RABBITMQ_PW}
     networks:
       - app-net
     devices:
       - "/dev/bus/usb:/dev/bus/usb"
-    privileged: true  # cap_add で代替可能
+    cap_add:
+      - SYS_RAWIO
+      - SYS_ADMIN
 
   rabbitmq:
     image: rabbitmq:3.11.7-management
     container_name: rabbitmq
     ports:
       - "5672:5672"
-      - "15672:15672"
+      - "15672:15672" # Web管理UIを開発用に開放
     environment:
       - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
-      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASS}
-    networks:
-      - app-net
-
-  db:
-    container_name: db
-    image: mysql
-    platform: linux/amd64
-    environment:
-      MYSQL_ROOT_PASSWORD=root
-      MYSQL_DATABASE=${DB_NAME}
-      MYSQL_USER=${DB_USER}
-      MYSQL_PASSWORD=${DB_PW}
+      - RABBITMQ_DEFAULT_PW=${RABBITMQ_PW}
     volumes:
-      - db-store:/var/lib/mysql
+      - rabbitmq_data:/var/lib/rabbitmq
     networks:
       - app-net
-
+  # db:
+  #   container_name: db
+  #   image: mysql
+  #   platform: linux/amd64
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD=root
+  #     MYSQL_DATABASE=${DB_NAME}
+  #     MYSQL_USER=${DB_USER}
+  #     MYSQL_PASSWORD=${DB_PW}
+  #   volumes:
+  #     - db-store:/var/lib/mysql
+  #   networks:
+  #     - app-net
 volumes:
-  db-store:
-
+    rabbitmq_data:  # RabbitMQのデータを永続化
 networks:
   app-net:
     driver: bridge
