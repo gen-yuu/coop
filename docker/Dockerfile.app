@@ -1,9 +1,7 @@
 FROM ubuntu:20.04
-USER root
 
-ENV WORK=/workdir
-#rootで行う
 USER root
+ENV WORK=/workdir
 WORKDIR ${WORK}
 
 RUN ln -sf /usr/share/zoneinfo/Asia/Tokyo /etc/localtime

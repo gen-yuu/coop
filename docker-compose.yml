@@ -28,11 +28,12 @@ services:
       - RABBITMQ_PW=${RABBITMQ_PW}
     networks:
       - app-net
-    devices:
-      - "/dev/bus/usb:/dev/bus/usb"
-    cap_add:
-      - SYS_RAWIO
-      - SYS_ADMIN
+    privileged: true
+    # devices:
+    #   - "/dev/bus/usb:/dev/bus/usb"
+    # cap_add:
+    #   - SYS_RAWIO
+    #   - SYS_ADMIN
 
   rabbitmq:
     image: rabbitmq:3.11.7-management
@@ -42,7 +43,7 @@ services:
       - "15672:15672" # Web管理UIを開発用に開放
     environment:
       - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
-      - RABBITMQ_DEFAULT_PW=${RABBITMQ_PW}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PW}
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     networks:
