@@ -28,12 +28,12 @@ services:
       - RABBITMQ_PW=${RABBITMQ_PW}
     networks:
       - app-net
-    privileged: true
-    # devices:
-    #   - "/dev/bus/usb:/dev/bus/usb"
-    # cap_add:
-    #   - SYS_RAWIO
-    #   - SYS_ADMIN
+    # privileged: true
+    devices:
+      - "/dev/bus/usb:/dev/bus/usb"
+    cap_add:
+      - SYS_RAWIO
+      - SYS_ADMIN
 
   rabbitmq:
     image: rabbitmq:3.11.7-management

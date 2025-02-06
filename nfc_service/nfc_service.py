@@ -56,7 +56,7 @@ def get_user(idm):
 
 
 if __name__ == '__main__':
-    try:
+     while True:
         # NFCリーダーを初期化
         clf = nfc.ContactlessFrontend(NFC_READER_ID)
         # RabbitMQの接続を作成
@@ -64,30 +64,16 @@ if __name__ == '__main__':
         channel = connection.channel()
 
         print("NFCリーダーを待機中...")
-
-        while True:
-            try:
-                # NFCタグの読み取りを試行
-                tag = clf.connect(rdwr={'on-connect': lambda tag: False})
-                # タグが正常に取得でき、IDm（識別子）が存在する場合
-                if tag and tag.idm:
-                    idm = binascii.hexlify(tag.idm).decode()  # バイナリを16進文字列に変換
-                    print(f"NFCタグ検出: {idm}")
-                    # ユーザー情報を取得
-                    user_info = get_user(idm)
-                    # RabbitMQへ送信
-                    send_nfc_data(channel, user_info)
-                else:
-                    print("無効なNFCタグが検出されました。")
-            except Exception as e:
-                print(f"エラー発生: {e}")
-
-    except KeyboardInterrupt:
-        # ユーザーが Ctrl+C を押した場合の処理
-        print("処理を終了します...")
-    finally:
-        # プログラム終了時にリソースを解放
-        if 'clf' in locals() and clf is not None:
-            clf.close()
-        if 'connection' in locals() and connection.is_open:
-            connection.close()
+        # NFCタグの読み取りを試行
+        tag = clf.connect(rdwr={'on-connect': lambda tag: False})
+        # タグが正常に取得でき、IDm（識別子）が存在する場合
+        if tag and tag.idm:
+            idm = binascii.hexlify(tag.idm).decode()  # バイナリを16進文字列に変換
+            print(f"NFCタグ検出: {idm}")
+            # ユーザー情報を取得
+            user_info = get_user(idm)
+            # RabbitMQへ送信
+            send_nfc_data(channel, user_info)
+        else:
+            print("無効なNFCタグが検出されました。")
+        clf.close()
