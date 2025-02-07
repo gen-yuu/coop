@@ -8,7 +8,6 @@ import pika
 
 # NFCリーダーのID
 NFC_READER_ID = "usb:054c:06c3"  # Sony RC-S380
-
 # 環境変数から RabbitMQ の接続情報を取得
 RABBITMQ_HOST = os.environ.get("RABBITMQ_HOST")
 RABBITMQ_PORT = int(os.environ.get("RABBITMQ_PORT"))
@@ -45,23 +44,10 @@ def send_nfc_data(channel, nfc_data):
     print(f" [x] Sent NFC data: {nfc_bytes}")
 
 
-# TODO:DB接続
-# ユーザー情報を取得するダミー関数
-def get_user(idm):
-    """
-    NFCタグのIDm（識別子）からユーザー情報を取得する。
-    実際の環境ではデータベースを参照する形に変更する。
-    """
-    return {"id": idm, "name": "Test User", "status": "active"}
-
-
-if __name__ == '__main__':
-     while True:
+def main():
+    while True:
         # NFCリーダーを初期化
         clf = nfc.ContactlessFrontend(NFC_READER_ID)
-        # RabbitMQの接続を作成
-        connection = create_rabbitmq_connection()
-        channel = connection.channel()
 
         print("NFCリーダーを待機中...")
         # NFCタグの読み取りを試行
@@ -70,10 +56,16 @@ if __name__ == '__main__':
         if tag and tag.idm:
             idm = binascii.hexlify(tag.idm).decode()  # バイナリを16進文字列に変換
             print(f"NFCタグ検出: {idm}")
-            # ユーザー情報を取得
-            user_info = get_user(idm)
+            # RabbitMQの接続を作成
+            connection = create_rabbitmq_connection()
+            channel = connection.channel()
             # RabbitMQへ送信
-            send_nfc_data(channel, user_info)
+            send_nfc_data(channel, idm)
+            connection.close()
         else:
             print("無効なNFCタグが検出されました。")
         clf.close()
+
+
+if __name__ == '__main__':
+    main()
