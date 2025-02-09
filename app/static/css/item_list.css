@@ -1,0 +1,68 @@
+.product-category.beverages .beverages-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* 2列に設定 */
+    gap: 20px; /* 列間のスペースを設定 */
+    
+}
+
+.product-category.beverages {
+    flex: 1 1 66%; /* 飲み物の領域を大きくする */
+}
+
+.product-category.food-and-coffee {
+    flex: 1 1 33%; /* 食べ物とコーヒーの領域を小さくする */
+}
+
+.beverage-column,
+.food-column,
+.coffee-column {
+    margin-bottom: 20px;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+}
+
+ul li {
+    border-bottom: 1px solid #ddd;
+    padding: 10px;
+}
+
+.low-stock.product-stock {
+    color: #ff4d4d;
+}
+
+.product-info {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.product-name, .product-price, .product-stock {
+    font-size: 16px;
+}
+
+.product-item {
+    background-color: #ffffff;
+    border: 1px solid #40c669;
+    padding: 5px 5px 5px 15px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    
+}
+
+.product-name,
+.product-price,
+.product-stock {
+    margin-bottom: 5px;
+    font-size: 18px;
+}
+
+.product-name {
+    font-weight: bold;
+}
+.product-item.low-stock {
+    border-color: red;
+    background-color: #fffdfd;
+}

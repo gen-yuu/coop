@@ -1,33 +1,23 @@
-FROM ubuntu:20.04
+# ベースイメージ（Python 3.9）
+FROM python:3.9-slim
 
-USER root
-ENV WORK=/workdir
-WORKDIR ${WORK}
+# 作業ディレクトリの設定
+WORKDIR /app
 
-RUN ln -sf /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
 
+# 各ライブラリインストール
 RUN apt-get update
-RUN apt install -y sudo git vim 
+RUN apt-get install -y \
+    vim \
+    sudo \
+    apache2 
 
-#pythonライブラリのインストール
-RUN sudo apt install -y python3-pip
-COPY requirements.txt .
-RUN python3 -m pip install -U pip
-#WSGI以外インストール
-RUN pip3 install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+CMD ["apache2","-D","FOREGROUND"]
 
-#RabbitMQのインストール
-RUN sudo apt-get install -y rabbitmq-server
-RUN service rabbitmq-server start
+# default.confを修正
+RUN rm /etc/apache2/sites-available/000-default.conf
+RUN pip install --no-cache-dir -r requirements.txt
 
-#Apacheインストール
-RUN sudo apt-get install -y apache2
-#WSGIのインストール
-RUN sudo apt install -y apache2-dev
-RUN pip3 install mod-wsgi
 
-#モジュールの実行権限の付与
-RUN sudo chmod 777 /usr/local/lib/python3.8/dist-packages/mod_wsgi/server/mod_wsgi-py38.cpython-38-x86_64-linux-gnu.so
-
-RUN git clone https://github.com/Nshisei/coop.git
 

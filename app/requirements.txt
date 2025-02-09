@@ -1,0 +1,8 @@
+flask
+requests
+Flask-SocketIO
+eventlet
+pika
+websocket
+mysql-connector-python
+mod-wsgi

@@ -29,9 +29,9 @@ services:
     networks:
       - app-net
 
-  server:
-    build: ./server
-    container_name: server
+  app:
+    build: ./app
+    container_name: app
     depends_on:
       - rabbitmq
       - db
@@ -42,24 +42,10 @@ services:
       - DB_PW: ${DB_PW}
       - DB_NAME: ${DB_NAME}
       - API-PORT: ${API_PORT}
+    privileged: true
     ports:
       - "8000:8000"
-
-  # app:
-  #   build: ./docker/Dockerfile.app
-  #   container_name: app
-  #   restart: always
-  #   volumes:
-  #     - ./app:/usr/src/app
-  #   ports:
-  #     - "8080:8080"
-  #   environment:
-  #     - DB_HOST=${DB_HOST}
-  #     - DB_USER=${DB_USER}
-  #     - DB_PW=${DB_PW}
-  #     - DB_NAME=${DB_NAME}
-  #   networks:
-  #     - app-net
+      - '80:80'
 
   nfc_service:
     build:
@@ -125,6 +111,7 @@ services:
       - 8080:80
     networks:
       - app-net
+
 volumes:
     rabbitmq_data:  # RabbitMQのデータを永続化
     mysql_data: #MYSQLのデータを永続化

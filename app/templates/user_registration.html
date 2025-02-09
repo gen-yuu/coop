@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block header %}
+<link rel="stylesheet" href="/static/css/user_registration.css">
+<script>
+// デフォルトで今年度の年を入力
+document.addEventListener('DOMContentLoaded', function() {
+    var currentYear = new Date().getFullYear();
+    document.getElementById('userYear').value = currentYear;
+});
+</script>
+{% endblock %}
+{% block title %} {{ title }} {% endblock %}
+{% block content %}
+<div id="message">{{ message }}</div>
+<section class="registration-form">
+    <form method="POST">
+        <label for="nfcId">NFC ID:</label>
+        <input type="text" id="nfcId" name="nfcId" readonly value="">
+
+        <label for="userName">ユーザ名:</label>
+        <input type="text" id="userName" name="userName" value="">
+
+        <label for="userYear">登録年度:</label>
+        <input type="number" id="userYear" name="userYear" value="2000" min="2000" max="9999">
+        
+        <label for="balance">現在の金額: </label>
+        <input type="number" id="balance" name="balance" readonly value="0">
+
+        <label for="charge">チャージ額: </label>
+        <input type="number" id="charge" name="charge" value="0">
+
+        <button type="submit" class="submit-button">登録</button>
+    </form>
+</section>
+{% endblock %}
+{% block script %}<script src="/static/js/user_registration.js"></script>{% endblock %}
+

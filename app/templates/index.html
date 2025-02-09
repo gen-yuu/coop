@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block header %}<link rel="stylesheet" href="/static/css/coop.css">{% endblock %}
+{% block title %} {{ title }} {% endblock %}
+{% block content %}
+<section class="item-list">
+    <h2>購入予定の商品</h2>
+    <div class="checkout">
+        <div class="total-amount">
+            <span>合計金額: </span><span id="total">0</span>円
+        </div>
+        <button id="confirm-purchase">購入確定</button>
+    </div>
+    <div id="insertBarcodeError"></div><!-- ここにバーコードに関するエラー情報を示すのタグが挿入される -->
+    <div id="items"></div> <!-- ここに選択した商品情報を示すタグが挿入される -->
+</section>
+
+<section class="card-info-section">
+    <h2 class="card-info-heading">ご登録カード情報</h2>
+    <div id="card">カード情報がここに表示されます</div>
+    <div id="insertBuyError" class="table-style"></div><!-- ここに購入ボタンを押した際のエラー情報を示すタグが挿入される　-->
+</section>
+{% endblock %}
+{% block script %}<script src="/static/js/coop.js"></script>{% endblock %}
+

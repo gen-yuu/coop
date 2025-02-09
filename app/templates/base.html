@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="jp">
+<head>
+    <meta charset="UTF-8">
+    <title>Coop Shopping</title>
+    <link rel="stylesheet" href="/static/css/header.css">    
+    {% block header %}{% endblock %}
+    <link rel="shortcut icon" href="/static/images/favicon.ico">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- ヘッダー -->
+        <header>
+            <h1>{% block title %}{% endblock %}</h1>
+        </header>
+
+        <!-- ページリンク -->
+        <nav class="navigation">
+            <ul>
+                <li><a href="{{ url_for('index') }}">Home</a></li>
+                <li><a href="{{ url_for('user_registration') }}">ユーザー登録</a></li>
+                <li><a href="{{ url_for('product_registration') }}">商品登録</a></li>
+                <li><a href="{{ url_for('item_list') }}">商品一覧</a></li>
+            </ul>
+        </nav>
+
+        {% block content %} 
+        {% endblock %}
+
+    </div>
+
+    {% block script %}{% endblock %}
+</body>
+</html>

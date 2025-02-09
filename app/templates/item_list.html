@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block header %}<link rel="stylesheet" href="/static/css/item_list.css">{% endblock %}
+{% block title %} {{ title }} {% endblock %}
+{% block content %}
+<div class="product-grid">
+    <!-- 飲料水カテゴリ（2列） -->
+    <div class="product-category beverages">
+        <h2>Beverages</h2>
+        <ul class="beverages-grid">
+            {% for product in data %}
+                {% if product[3] == 'drink' %}
+                    <li class="product-item {% if product[2] <= 10 %}low-stock{% endif %}">
+                        <div class="product-name">{{ product[0] }}</div>
+                        <div class="product-price">¥{{ product[1] }}</div>
+                        <div class="product-stock {% if product[2] <= 10 %}low-stock{% endif %}">在庫: {{ product[2] }}</div>
+                    </li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!-- 食べ物とコーヒーカテゴリ -->
+    <div class="product-category food-and-coffee">
+        <div class="coffee-column">
+            <h2>Coffee</h2>
+            <ul id="coffee">
+                {% for product in data %}
+                    {% if product[3] == 'coffee' %}
+                        <li class="product-item {% if product[2] <= 10 %}low-stock{% endif %}">
+                            <div class="product-name">{{ product[0] }}</div>
+                            <div class="product-price">¥{{ product[1] }}</div>
+                            <div class="product-stock {% if product[2] <= 10 %}low-stock{% endif %}">在庫: {{ product[2] }}</div>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="food-column">
+            <h2>Food</h2>
+            <ul id="food">
+                {% for product in data %}
+                    {% if product[3] == 'food' %}
+                        <li class="product-item {% if product[2] <= 10 %}low-stock{% endif %}">
+                            <div class="product-name">{{ product[0] }}</div>
+                            <div class="product-price">¥{{ product[1] }}</div>
+                            <div class="product-stock {% if product[2] <= 10 %}low-stock{% endif %}">在庫: {{ product[2] }}</div>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block script %}<script src="/static/js/coop.js"></script>{% endblock %}
+
