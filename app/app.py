@@ -164,4 +164,5 @@ def create_app():
 
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=APP_PORT)
+    create_app()
+    wsgi.server(eventlet.listen(("0.0.0.0", 8080)), app)
