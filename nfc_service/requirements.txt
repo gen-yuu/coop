@@ -1,0 +1,3 @@
+pika
+pynfc
+nfcpy

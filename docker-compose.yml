@@ -1,67 +1,126 @@
-version: '3.8'
-
 services:
-  app:
-    build: ./docker/Dockerfile.app
-    container_name: app
-    restart: always
-    volumes:
-      - ./app:/usr/src/app
+#   rabbitmq:
+#     image: rabbitmq:3.11.7-management
+#     container_name: rabbitmq
+#     ports:
+#       - "5672:5672"
+#       - "15672:15672" # Web管理UIを開発用に開放
+#     environment:
+#       - RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+#       - RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PW}
+#     volumes:
+#       - rabbitmq_data:/var/lib/rabbitmq
+#     networks:
+#       - app-net
+
+#   db:
+#     image: mysql:8
+#     container_name: db
+#     restart: always
+#     environment:
+#       - MYSQL_ROOT_PASSWORD: ${DB_ROOT_PW}
+#       - MYSQL_DATABASE: ${DB_NAME}
+#       - MYSQL_USER: ${DB_USER}
+#       - MYSQL_PASSWORD: ${DB_PW}
+#     ports:
+#       - "3306:3306"
+#     volumes:
+#       - mysql_data:/var/lib/mysql
+#     networks:
+#       - app-net
+
+  # backend:
+  #   build: ./backend
+  #   ports:
+  #     - "5000:5000"
+  #   tty: true
+  #   volumes:
+  #     - ./backend:/app
+  #   environment:
+  #     - FLASK_ENV=development
+  #   networks:
+  #     - app-net
+
+  # nfc_service:
+  #   build:
+  #     context: ./
+  #     dockerfile: docker/Dockerfile.nfc
+  #   container_name: nfc_service
+  #   depends_on:
+  #     - rabbitmq
+  #     - db
+  #   restart: always
+  #   environment:
+  #     - RABBITMQ_HOST: ${RABBITMQ_HOST}
+  #     - RABBITMQ_PORT: ${RABBITMQ_PORT}
+  #     - RABBITMQ_USER: ${RABBITMQ_USER}
+  #     - RABBITMQ_PW: ${RABBITMQ_PW}
+  #   networks:
+  #     - app-net
+  #   # privileged: true
+  #   devices:
+  #     - "/dev/bus/usb:/dev/bus/usb"
+  #   cap_add:
+  #     - SYS_RAWIO
+  #     - SYS_ADMIN
+      
+  # barcode_service:
+  #   build:
+  #     context: ./
+  #     dockerfile: docker/Dockerfile.barcode
+  #   container_name: barcode_service
+  #   depends_on:
+  #     - rabbitmq
+  #     - db
+  #   restart: always
+  #   environment:
+  #     - RABBITMQ_HOST: ${RABBITMQ_HOST}
+  #     - RABBITMQ_PORT: ${RABBITMQ_PORT}
+  #     - RABBITMQ_USER: ${RABBITMQ_USER}
+  #     - RABBITMQ_PW: ${RABBITMQ_PW}
+  #   networks:
+  #     - app-net
+  #   # privileged: true
+  #   devices:
+  #     - "/dev/bus/usb:/dev/bus/usb"
+  #   cap_add:
+  #     - SYS_RAWIO
+  #     - SYS_ADMIN
+
+  frontend:
+    build: ./frontend
     ports:
-      - "8080:8080"
-    environment:
-      - DB_HOST=${DB_HOST}
-      - DB_USER=${DB_USER}
-      - DB_PW=${DB_PW}
-      - DB_NAME=${DB_NAME}
-    networks:
-      - app-net
-
-  reader:
-    build: ./docker/Dockerfile.reader
-    container_name: reader
-    restart: always
+      - "3000:3000"
+    tty: true
     volumes:
-      - ./reader:/usr/src/reader
+      - ./frontend:/usr/src/app
     environment:
-      - DB_HOST=${DB_HOST}
-      - DB_USER=${DB_USER}
-      - DB_PW=${DB_PW}
-      - DB_NAME=${DB_NAME}
-    networks:
-      - app-net
-    devices:
-      - "/dev/bus/usb:/dev/bus/usb"
-    privileged: true  # cap_add で代替可能
-
-  rabbitmq:
-    image: rabbitmq:3.11.7-management
-    container_name: rabbitmq
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    environment:
-      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
-      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASS}
+      - REACT_APP_API_URL=http://backend:5000
     networks:
       - app-net
 
-  db:
-    container_name: db
-    image: mysql
-    platform: linux/amd64
-    environment:
-      MYSQL_ROOT_PASSWORD=root
-      MYSQL_DATABASE=${DB_NAME}
-      MYSQL_USER=${DB_USER}
-      MYSQL_PASSWORD=${DB_PW}
-    volumes:
-      - db-store:/var/lib/mysql
-    networks:
-      - app-net
 
-volumes:
-  db-store:
+  # # phpMyAdmin
+  # # DB管理用コンテナ
+  # # http://localhost:8081でDBのWebUIにアクセス
+  # phpmyadmin:
+  #   container_name: phpmyadmin
+  #   image: phpmyadmin/phpmyadmin
+  #   depends_on:
+  #     - db
+  #   environment:
+  #     - PMA_ARBITRARY: 1
+  #     - PMA_HOSTS: ${DB_HOST}
+  #     - PMA_USER: root
+  #     - PMA_PASSWORD: ${DB_ROOT_PW}
+  #   ports:
+  #     - 8080:80
+  #   networks:
+  #     - app-net
+
+# volumes:
+#     rabbitmq_data:  # RabbitMQのデータを永続化
+#     mysql_data: #MYSQLのデータを永続化
 
 networks:
   app-net:
