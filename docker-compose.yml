@@ -1,17 +1,17 @@
 services:
-#   rabbitmq:
-#     image: rabbitmq:3.11.7-management
-#     container_name: rabbitmq
-#     ports:
-#       - "5672:5672"
-#       - "15672:15672" # Web管理UIを開発用に開放
-#     environment:
-#       - RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
-#       - RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PW}
-#     volumes:
-#       - rabbitmq_data:/var/lib/rabbitmq
-#     networks:
-#       - app-net
+  rabbitmq:
+    image: rabbitmq:3.11.7-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672" # Web管理UIを開発用に開放
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PW}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - app-net
 
 #   db:
 #     image: mysql:8
@@ -29,63 +29,63 @@ services:
 #     networks:
 #       - app-net
 
-  # backend:
-  #   build: ./backend
-  #   ports:
-  #     - "5000:5000"
-  #   tty: true
-  #   volumes:
-  #     - ./backend:/app
-  #   environment:
-  #     - FLASK_ENV=development
-  #   networks:
-  #     - app-net
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    tty: true
+    volumes:
+      - ./backend:/usr/src/app
+    environment:
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - RABBITMQ_PORT=${RABBITMQ_PORT}
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PW=${RABBITMQ_PW}
+    networks:
+      - app-net
 
-  # nfc_service:
-  #   build:
-  #     context: ./
-  #     dockerfile: docker/Dockerfile.nfc
-  #   container_name: nfc_service
-  #   depends_on:
-  #     - rabbitmq
-  #     - db
-  #   restart: always
-  #   environment:
-  #     - RABBITMQ_HOST: ${RABBITMQ_HOST}
-  #     - RABBITMQ_PORT: ${RABBITMQ_PORT}
-  #     - RABBITMQ_USER: ${RABBITMQ_USER}
-  #     - RABBITMQ_PW: ${RABBITMQ_PW}
-  #   networks:
-  #     - app-net
-  #   # privileged: true
-  #   devices:
-  #     - "/dev/bus/usb:/dev/bus/usb"
-  #   cap_add:
-  #     - SYS_RAWIO
-  #     - SYS_ADMIN
+  nfc_service:
+    build: ./nfc_service
+    container_name: nfc_service
+    depends_on:
+      - rabbitmq
+    tty: true
+    volumes:
+      - ./nfc_service:/usr/src/app
+    environment:
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - RABBITMQ_PORT=${RABBITMQ_PORT}
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PW=${RABBITMQ_PW}
+    networks:
+      - app-net
+    devices:
+      - "/dev/bus/usb:/dev/bus/usb"
+    cap_add:
+      - SYS_RAWIO
+      - SYS_ADMIN
       
-  # barcode_service:
-  #   build:
-  #     context: ./
-  #     dockerfile: docker/Dockerfile.barcode
-  #   container_name: barcode_service
-  #   depends_on:
-  #     - rabbitmq
-  #     - db
-  #   restart: always
-  #   environment:
-  #     - RABBITMQ_HOST: ${RABBITMQ_HOST}
-  #     - RABBITMQ_PORT: ${RABBITMQ_PORT}
-  #     - RABBITMQ_USER: ${RABBITMQ_USER}
-  #     - RABBITMQ_PW: ${RABBITMQ_PW}
-  #   networks:
-  #     - app-net
-  #   # privileged: true
-  #   devices:
-  #     - "/dev/bus/usb:/dev/bus/usb"
-  #   cap_add:
-  #     - SYS_RAWIO
-  #     - SYS_ADMIN
+  barcode_service:
+    build: ./barcode_service
+    container_name: barcode_service
+    depends_on:
+      - rabbitmq
+    tty: true
+    volumes:
+      - ./barcode_service:/usr/src/app
+    environment:
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - RABBITMQ_PORT=${RABBITMQ_PORT}
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PW=${RABBITMQ_PW}
+    networks:
+      - app-net
+    # privileged: true
+    devices:
+      - "/dev/bus/usb:/dev/bus/usb"
+    cap_add:
+      - SYS_RAWIO
+      - SYS_ADMIN
 
   frontend:
     build: ./frontend
@@ -118,8 +118,8 @@ services:
   #   networks:
   #     - app-net
 
-# volumes:
-#     rabbitmq_data:  # RabbitMQのデータを永続化
+volumes:
+    rabbitmq_data:  # RabbitMQのデータを永続化
 #     mysql_data: #MYSQLのデータを永続化
 
 networks:
