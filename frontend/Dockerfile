@@ -2,10 +2,14 @@ FROM node:lts-alpine
 
 WORKDIR /usr/src/app
 
-#COPY package.json .
-# 最初に「create-react-app」をインストールする
-#RUN npm install -g create-react-app
+# package.json のみを先にコピー（ビルドキャッシュを利用）
+COPY package.json package-lock.json ./
 
-#COPY . .
+# 必要なパッケージをインストール
+RUN npm install && npm install socket.io-client
 
-#CMD ["npm", "start"]
+# アプリのソースコードをコピー
+COPY . .
+
+# アプリを起動
+CMD ["npm", "run", "start"]

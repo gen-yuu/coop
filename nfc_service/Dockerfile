@@ -12,11 +12,11 @@ RUN apt install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # 依存ライブラリのインストール
-COPY ../nfc_service/requirements.txt .
+COPY ./requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # NFCサービススクリプトをコピー
-COPY ../nfc_service/nfc_service.py .
+# COPY ../nfc_service/nfc_service.py .
 
 # スクリプトを実行
-CMD ["python", "nfc_service.py"]
+# CMD ["python", "nfc_service.py"]
