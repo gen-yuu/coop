@@ -26,7 +26,8 @@ services:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./init:/docker-entrypoint-initdb.d  # ←★ init.sqlをここに置く
+      - ./init:/docker-entrypoint-initdb.d  
+      - ./my.cnf:/etc/mysql/conf.d/my.cnf 
     networks:
       - app-net
 
@@ -106,7 +107,7 @@ services:
 
   # phpMyAdmin
   # DB管理用コンテナ
-  # http://localhost:8081でDBのWebUIにアクセス
+  # http://localhost:8080でDBのWebUIにアクセス
   phpmyadmin:
     container_name: phpmyadmin
     image: phpmyadmin/phpmyadmin
@@ -117,6 +118,8 @@ services:
       - PMA_HOSTS=${DB_HOST}
       - PMA_USER=root
       - PMA_PASSWORD=${DB_ROOT_PW}
+      - UPLOAD_LIMIT=64M
+      - PMA_CHARSET=utf8mb4 
     ports:
       - 8080:80
     networks:
