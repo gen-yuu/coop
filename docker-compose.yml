@@ -31,6 +31,7 @@ services:
 
   backend:
     build: ./backend
+    container_name: backend
     ports:
       - "8000:8000"
     tty: true
@@ -49,6 +50,7 @@ services:
     container_name: nfc_service
     depends_on:
       - rabbitmq
+      - backend
     tty: true
     volumes:
       - ./nfc_service:/usr/src/app
@@ -70,6 +72,7 @@ services:
     container_name: barcode_service
     depends_on:
       - rabbitmq
+      - backend
     tty: true
     volumes:
       - ./barcode_service:/usr/src/app
@@ -80,7 +83,6 @@ services:
       - RABBITMQ_PW=${RABBITMQ_PW}
     networks:
       - app-net
-    # privileged: true
     devices:
       - "/dev/bus/usb:/dev/bus/usb"
     cap_add:
@@ -89,6 +91,7 @@ services:
 
   frontend:
     build: ./frontend
+    container_name: frontend
     ports:
       - "3000:3000"
     tty: true
