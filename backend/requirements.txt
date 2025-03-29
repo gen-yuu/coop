@@ -3,3 +3,4 @@ flask_cors
 pika
 mysql-connector-python
 eventlet
+pymysql

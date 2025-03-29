@@ -14,7 +14,7 @@ DB_NAME=${DB_NAME:-test_database}
 DB_USER=root
 DB_PASS=${DB_ROOT_PW:-root}
 
-echo "🧾 テーブル一覧と詳細構造（$DB_NAME）"
+echo "テーブル一覧と詳細構造（${DB_NAME}）"
 
 # テーブル一覧を取得
 tables=$(docker exec -i "$DB_CONTAINER" mysql -u"$DB_USER" -p"$DB_PASS" -N -e "SHOW TABLES IN $DB_NAME")
