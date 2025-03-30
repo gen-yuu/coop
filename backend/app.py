@@ -8,10 +8,12 @@ from flask_cors import CORS
 from flask_socketio import SocketIO
 import json
 from db_api.database import *
+from utils.formatters import build_item_info, build_user_info
 
 app = Flask(__name__)
 CORS(app)  # ReactとFlaskが別サーバーならCORSを有効化
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')  # WebSocketを有効化
+
 RABBITMQ_HOST = os.getenv("RABBITMQ_HOST")
 RABBITMQ_PORT = int(os.getenv("RABBITMQ_PORT"))
 RABBITMQ_USER = os.getenv("RABBITMQ_USER")
@@ -29,28 +31,21 @@ def on_rabbitmq_message_item(body):
 
     # # DBから商品情報を取得
     try:
-        product_data = get_product_by_barcode(barcode)
+        item_data = get_product_by_barcode(barcode)
     except Exception as e:
         print(f"DBエラー: {e}")
-        product_data = None
+        item_data = None
 
     # WebSocketを通じてフロントエンドに商品情報を送信
-    if product_data:
-        item_data = {
-            "id": product_data["id"],
-            "name": product_data["name"],
-            "price": product_data["price"],
-            "code": product_data["code"],
-            "class": product_data["class"],
-            "stock_num": product_data["stock_num"]
-        }
-        print(f"Sending product data: {item_data}")
+    if item_data:
+        item_info = build_item_info(item_data)
+        print(f"Sending product data: {item_info}")
 
         # WebSocketを通じてフロントエンドに商品情報を送信
-        socketio.emit("item_registered", item_data)
+        socketio.emit("item_registered", item_info)
     else:
         print(f"No product found for barcode: {barcode}")
-        socketio.emit("item_not_found", item_data)
+        socketio.emit("item_not_found", {"code": barcode})
     return 0
 
 
@@ -70,20 +65,14 @@ def on_rabbitmq_message_user(body):
         user_data = None
 
     if user_data:
-        user_info = {
-            "id": user_data["id"],
-            "name": user_data["name"],
-            "grade": user_data["grade"],
-            "balance": user_data["balance"],
-            "nfc_id": user_data["nfc_id"]
-        }
+        user_info = build_user_info(user_data)
         print(f"Sending user data: {user_info}")
 
         # WebSocketを通じてフロントエンドにユーザー情報を送信
         socketio.emit("user_registered", user_info)
     else:
         print(f"No user found for NFC data: {nfc_data}")
-        socketio.emit("user_not_found", user_info)
+        socketio.emit("user_not_found", {"nfc_id": nfc_data})
     return 0
 
 
