@@ -1,27 +1,28 @@
 import sys
 import os
 
+# backend ディレクトリをモジュールパスに追加
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 import pytest
-from flask import Flask
-from flask_socketio import SocketIO
-from unittest.mock import patch
-from app import on_rabbitmq_message_item, on_rabbitmq_message_user
+from unittest.mock import patch, MagicMock
+from consumers.rabbitmq_handler import RabbitMQHandler
 
 
-# --- Flask アプリと SocketIO の初期化（必要に応じて使用） ---
 @pytest.fixture
-def app():
-    app = Flask(__name__)
-    socketio = SocketIO(app, async_mode='threading')
-    return app
+def socketio_mock():
+    return MagicMock()
+
+
+@pytest.fixture
+def handler(socketio_mock):
+    return RabbitMQHandler(socketio_mock)
 
 
 # --- 商品テスト（バーコード：該当あり） ---
-@patch("app.socketio.emit")
-@patch("app.get_product_by_barcode")
-def test_on_rabbitmq_message_item_found(mock_get_product, mock_emit):
-    product = {
+@patch("consumers.rabbitmq_handler.get_item_by_barcode")
+def test_handle_item_found(mock_get_item, handler, socketio_mock):
+    item = {
         "id": 1,
         "name": "烏龍茶",
         "price": 100,
@@ -29,46 +30,39 @@ def test_on_rabbitmq_message_item_found(mock_get_product, mock_emit):
         "class": "drink",
         "stock_num": 2
     }
-    mock_get_product.return_value = product
+    mock_get_item.return_value = item
 
-    body = b"112468"
-    on_rabbitmq_message_item(body)
+    handler.handle_item(b"112468")
 
-    expected_emit_data = product  # または app.py 側と一致する dict を再定義
-    mock_emit.assert_called_once_with("item_registered", expected_emit_data)
+    socketio_mock.emit.assert_called_once_with("item_registered", item)
 
 
 # --- 商品テスト（バーコード：該当なし） ---
-@patch("app.socketio.emit")
-@patch("app.get_product_by_barcode")
-def test_on_rabbitmq_message_item_not_found(mock_get_product, mock_emit):
-    mock_get_product.return_value = None
+@patch("consumers.rabbitmq_handler.get_item_by_barcode")
+def test_handle_item_not_found(mock_get_item, handler, socketio_mock):
+    mock_get_item.return_value = None
 
-    body = b"999999"
-    on_rabbitmq_message_item(body)
+    handler.handle_item(b"999999")
 
-    mock_emit.assert_called_once_with("item_not_found", {"code": "999999"})
+    socketio_mock.emit.assert_called_once_with("item_not_found", {"code": "999999"})
 
 
 # --- ユーザーテスト（NFC：該当あり） ---
-@patch("app.socketio.emit")
-@patch("app.get_user_by_nfc_data")
-def test_on_rabbitmq_message_user_found(mock_get_user, mock_emit):
+@patch("consumers.rabbitmq_handler.get_user_by_nfc_data")
+def test_handle_user_found(mock_get_user, handler, socketio_mock):
     user = {"id": 2, "name": "源内裕貴", "grade": "B4", "balance": 0, "nfc_id": "53if95"}
     mock_get_user.return_value = user
-    body = b"53if95"
-    on_rabbitmq_message_user(body)
 
-    mock_emit.assert_called_once_with("user_registered", user)
+    handler.handle_user(b"53if95")
+
+    socketio_mock.emit.assert_called_once_with("user_registered", user)
 
 
 # --- ユーザーテスト（NFC：該当なし） ---
-@patch("app.socketio.emit")
-@patch("app.get_user_by_nfc_data")
-def test_on_rabbitmq_message_user_not_found(mock_get_user, mock_emit):
+@patch("consumers.rabbitmq_handler.get_user_by_nfc_data")
+def test_handle_user_not_found(mock_get_user, handler, socketio_mock):
     mock_get_user.return_value = None
 
-    body = b"unknown-nfc"
-    on_rabbitmq_message_user(body)
+    handler.handle_user(b"unknown-nfc")
 
-    mock_emit.assert_called_once_with("user_not_found", {"nfc_id": "unknown-nfc"})
+    socketio_mock.emit.assert_called_once_with("user_not_found", {"nfc_id": "unknown-nfc"})
