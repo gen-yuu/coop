@@ -1,172 +1,89 @@
-import mysql.connector
-from mysql.connector import Error
 import os
+import pymysql
+import datetime
 
-# データベースの設定
-db_config = {
-    'host': os.getenv('DB_HOST'),
-    'user': os.getenv('DB_USER'),
-    'password': os.getenv('DB_PW'),
-    'database': os.getenv('DB_NAME')
-}
-
-abs_dirpath = os.path.dirname(os.path.abspath(__file__))  # 絶対パスを取得
-sql_dir = os.path.join(abs_dirpath, 'sqls')
+DB_HOST = os.getenv("DB_HOST")
+DB_USER = os.getenv("DB_USER")
+DB_PASSWORD = os.getenv("DB_PW")
+DB_NAME = os.getenv("DB_NAME")
 
 
-def exec_sql_cmd(path_to_sql, replace_dict={}):
-    try:
-        with mysql.connector.connect(autocommit=True, **db_config) as conn:
-            with conn.cursor() as cur:
-                with open(path_to_sql, 'r') as f:
-                    sql = f.read()
-                    for key, val in replace_dict.items():
-                        sql = sql.replace(key, val)
-                    cur.execute(sql)
-                rows = cur.fetchall()
-        return rows
-    except Error as err:
-        return err
+def get_connection():
+    return pymysql.connect(host=DB_HOST,
+                           user=DB_USER,
+                           password=DB_PASSWORD,
+                           db=DB_NAME,
+                           charset='utf8mb4',
+                           cursorclass=pymysql.cursors.DictCursor)
 
 
-def get_items(barcode_data):
-    """取得したバーコードのid, name, priceを取得
-    barcodeがDBに登録済み
-        → id, name, price を返す
-    barcodeが未登録
-        → 空の配列を返す
-    barcodeに登録された商品が複数
-        → error
+def get_item_by_barcode(barcode):
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            sql = "SELECT * FROM items WHERE code = %s LIMIT 1"
+            cursor.execute(sql, (barcode,))
+            return cursor.fetchone()
+
+
+def get_item_by_id(id):
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            sql = "SELECT * FROM items WHERE id = %s LIMIT 1"
+            cursor.execute(sql, (id,))
+            return cursor.fetchone()
+
+
+def get_user_by_nfc_data(nfc_id):
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            sql = "SELECT * FROM users WHERE nfc_id = %s LIMIT 1"
+            cursor.execute(sql, (nfc_id,))
+            return cursor.fetchone()
+
+
+def get_user_by_id(id):
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            sql = "SELECT * FROM users WHERE id = %s LIMIT 1"
+            cursor.execute(sql, (id,))
+            return cursor.fetchone()
+
+
+def update_stock(item_id: int, diff: int, conn):
     """
-    sql_path = os.path.join(sql_dir, 'get_items.sql')
-    rows = exec_sql_cmd(sql_path, replace_dict={'BARCODE': str(barcode_data)})
-    if len(rows) == 1:
-        return rows[0]
-    elif len(rows) == 0:
-        return barcode_data
-    else:
-        print('error')
-
-
-def get_user(value):
-    """取得したバーコードのid, name, priceを取得
-    barcodeがDBに登録済み
-        → id, name, price を返す
-    barcodeが未登録
-        → 空の配列を返す
-    barcodeに登録された商品が複数
-        → error
+    商品の在庫を更新する（増減）
+    :param item_code: 商品コード
+    :param diff: 増減数（正:加算、負:減算）
+    :param conn: トランザクション中のコネクション
     """
-    sql_path = os.path.join(sql_dir, 'get_user.sql')
-    rows = exec_sql_cmd(sql_path, replace_dict={'NFC_ID': str(value)})
-    if len(rows) == 1:
-        return rows[0]
-    elif len(rows) == 0:
-        return value
-    else:
-        print('error')
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute("UPDATE items SET stock_num = stock_num + %s WHERE id = %s",
+                           (diff, item_id))
 
 
-def new_user_or_update_user(data):
-    """取得したバーコードのid, name, priceを取得
-    barcodeがDBに登録済み
-        → id, name, price を返す
-    barcodeが未登録
-        → 空の配列を返す
-    barcodeに登録された商品が複数
-        → error
+def update_balance(user_id: int, diff: int, conn):
     """
-    nfc_id = data["nfcId"]
-    name = data["userName"]
-    year = data["userYear"]
-    balance = data["balance"]
-    charge = data["charge"]
-    replace_ditc = {
-        'NFC_ID': str(nfc_id),
-        'NAME': str(name),
-        'GRADE': str(year),
-        'CHARGE': str(charge),
-    }
-    if isinstance(get_user(nfc_id), tuple):
-        # 既に商品が存在する
-        sql_path = os.path.join(sql_dir, 'update_user.sql')
-        result = exec_sql_cmd(sql_path, replace_dict=replace_ditc)
-    else:
-        sql_path = os.path.join(sql_dir, 'insert_new_user.sql')
-        result = exec_sql_cmd(sql_path, replace_dict=replace_ditc)
-    return result
-
-
-def new_items_or_update_items(data):
-    """取得したバーコードのid, name, priceを取得
-    barcodeがDBに登録済み
-        → id, name, price を返す
-    barcodeが未登録
-        → 空の配列を返す
-    barcodeに登録された商品が複数
-        → error
+    ユーザーの残高を更新する（増減）
+    :param user_id: ユーザーID
+    :param diff: 増減額（正:加算、負:減算）
+    :param conn: トランザクション中のコネクション
     """
-    barcode = data['barcode']
-    productName = data['productName']
-    productPrice = data['productPrice']
-    stockQuantity = data['stockQuantity']
-    stockAdd = data['stockAdd']
-    productCategory = data['productCategory']
-    replace_ditc = {
-        'NAME': str(productName),
-        'ADD_NUM': str(stockAdd),
-        'BARCODE': str(barcode),
-        'PRICE': str(productPrice),
-        'CLASS': str(productCategory),
-    }
-    if isinstance(get_items(barcode), tuple):
-        # 既に商品が存在する
-        sql_path = os.path.join(sql_dir, 'update_item.sql')
-        result = exec_sql_cmd(sql_path, replace_dict=replace_ditc)
-    else:
-        sql_path = os.path.join(sql_dir, 'insert_new_item.sql')
-        result = exec_sql_cmd(sql_path, replace_dict=replace_ditc)
-    return result
+    with conn.cursor() as cursor:
+        cursor.execute("UPDATE users SET balance = balance + %s WHERE id = %s", (diff, user_id))
 
 
-def insert_order(data):
-    """取得したバーコードのid, name, priceを取得
-    barcodeがDBに登録済み
-        → id, name, price を返す
-    barcodeが未登録
-        → 空の配列を返す
-    barcodeに登録された商品が複数
-        → error
-    """
-    user_id = data['user_id']
-    item_ids = data['item_id']
-    prices = data['price']
-    sql_path = os.path.join(sql_dir, 'insert_order.sql')
-    sql_path2 = os.path.join(sql_dir, 'update_stock_num.sql')
-    for item_id, price in zip(item_ids, prices):
-        replace_ditc = {
-            'USER_ID': str(user_id),
-            'ITEM_ID': str(item_id),
-            'ITEM_PRICE': str(price),
-        }
-        result = exec_sql_cmd(sql_path, replace_dict=replace_ditc)
-        result += exec_sql_cmd(sql_path2, replace_dict=replace_ditc)
+def insert_order(user_id: int, conn) -> int:
+    now = datetime.datetime.now()
+    with conn.cursor() as cursor:
+        cursor.execute("INSERT INTO orders (user_id, datetime) VALUES (%s, %s)", (user_id, now))
+        order_id = cursor.lastrowid  # ← 自動採番された注文IDを取得
+    return order_id
 
 
-def update_balance(data):
-    """取得したバーコードのid, name, priceを取得
-    barcodeがDBに登録済み
-        → id, name, price を返す
-    barcodeが未登録
-        → 空の配列を返す
-    barcodeに登録された商品が複数
-        → error
-    """
-    user_id = data['user_id']
-    total = data['total']
-    sql_path = os.path.join(sql_dir, 'update_balance.sql')
-    replace_ditc = {
-        'TOTAL': str(total),
-        'USER_ID': str(user_id),
-    }
-    result = exec_sql_cmd(sql_path, replace_dict=replace_ditc)
+def insert_order_item(order_id: int, item: dict, quantity: int, conn):
+    with conn.cursor() as cursor:
+        cursor.execute(
+            "INSERT INTO order_items (order_id, item_id, item_name, item_price, item_class, quantity) "
+            "VALUES (%s, %s, %s, %s, %s, %s)",
+            (order_id, item["id"], item["name"], item["price"], item["class"], quantity))
